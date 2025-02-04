@@ -54,9 +54,15 @@ function drawDiagram() {
 drawDiagram();
 
 
+enum Mode {
+    View,
+    Connection,
+    Dragging
+}
+
+let mode: Mode = Mode.View;
 let selectedNode: DiagramNode | null = null;
-let connectionMode: boolean = false;
-let draggingMode: boolean = false;
+
 
 function getNodeAt(x: number, y: number): DiagramNode | null {
     for (let i = nodes.length - 1; i >= 0; i--) {
@@ -78,45 +84,64 @@ canvas.addEventListener('mousedown', (e) => {
 
     if (clickedNode == null) {
         selectedNode = null;
-        connectionMode = false;
+        mode = Mode.View;
+        drawDiagram();
         return;
     }
 
     if (e.altKey) {
-        draggingMode = true;
+        mode = Mode.Dragging;
         selectedNode = clickedNode;
         return;
     }
 
-    if (connectionMode) {
+    if (mode === Mode.Connection) {
         const sourceNode = selectedNode;
         const targetNode = getNodeAt(mouseX, mouseY);;
         if (sourceNode && targetNode && sourceNode !== targetNode) {
             connections.pushUnique({ source: sourceNode.id, target: targetNode.id });
             drawDiagram();
         }
-        connectionMode = false;
+        mode = Mode.View;
         selectedNode = null;
     } else {
-        connectionMode = true;
+        mode = Mode.Connection;
         selectedNode = clickedNode;
     }
     
 });
 
 canvas.addEventListener('mousemove', (e) => {
-    if (draggingMode && selectedNode) {
-        const rect = canvas.getBoundingClientRect();
-        selectedNode.x = e.clientX - rect.left;
-        selectedNode.y = e.clientY - rect.top;
-        drawDiagram();
+    
+    if (selectedNode) {
+        if (mode === Mode.Dragging) {
+            const rect = canvas.getBoundingClientRect();
+            selectedNode.x = e.clientX - rect.left;
+            selectedNode.y = e.clientY - rect.top;
+            drawDiagram();
+        }
+
+        if (mode === Mode.Connection) {
+            drawDiagram();
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            context.beginPath();
+            context.moveTo(selectedNode.x, selectedNode.y);
+            context.lineTo(mouseX, mouseY);
+            context.strokeStyle = 'black';
+            context.lineWidth = 2;
+            context.stroke();
+        }
     }
+
+    
 });
 
 canvas.addEventListener('mouseup', () => {
-    if (draggingMode) {
+    if (mode === Mode.Dragging) {
         selectedNode = null;
-        draggingMode = false;
+        mode = Mode.View;
     }
 });
 
