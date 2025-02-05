@@ -10,12 +10,13 @@ const context = canvas.getContext('2d')!;
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-
+const NODE_RADIUS: number = 30;
+const NODE_COLOR: string = 'black';
 
 let nodes: DiagramNode[] = [
-    { id: 0, x: 100, y: 100, radius: 30, color: 'blue' },
-    { id: 1, x: 300, y: 100, radius: 30, color: 'green' },
-    { id: 2, x: 200, y: 200, radius: 30, color: 'red' }
+    { id: 0, x: 100, y: 100 },
+    { id: 1, x: 300, y: 100 },
+    { id: 2, x: 200, y: 200 }
 ];
 
 const connections: ConnectionList = new ConnectionList(
@@ -28,8 +29,7 @@ function drawDiagram() {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw connections
-    connections.forEach(conn => {
++    connections.forEach(conn => {
         const sourceNode = nodes.find(node => node.id === conn.source);
         const targetNode = nodes.find(node => node.id === conn.target);
         if (sourceNode && targetNode) {
@@ -42,11 +42,10 @@ function drawDiagram() {
         }
     });
 
-    // Draw nodes
     nodes.forEach(node => {
         context.beginPath();
-        context.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        context.fillStyle = node.color;
+        context.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+        context.fillStyle = NODE_COLOR;
         context.fill();
         context.strokeStyle = 'black';
         context.lineWidth = 2;
@@ -72,7 +71,7 @@ function getNodeAt(x: number, y: number): DiagramNode | null {
         const node = nodes[i];
         const dx = node.x - x;
         const dy = node.y - y;
-        if (dx * dx + dy * dy <= node.radius * node.radius) {
+        if (dx * dx + dy * dy <= NODE_RADIUS * NODE_RADIUS) {
             return node;
         }
     }

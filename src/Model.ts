@@ -3,8 +3,6 @@ export type DiagramNode = {
     id: number;
     x: number;
     y: number;
-    radius: number;
-    color: string;
 };
 
 export type Connection = {
