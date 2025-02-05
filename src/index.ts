@@ -3,6 +3,8 @@ import { DiagramNode, ConnectionList } from './Model.js';
 
 
 const exportButton = document.getElementById('export') as HTMLButtonElement;
+const addButton = document.getElementById('add') as HTMLButtonElement;
+
 const canvas = document.getElementById('diagram') as HTMLCanvasElement;
 const context = canvas.getContext('2d')!;
 
@@ -10,15 +12,15 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 
-const nodes: DiagramNode[] = [
-    { id: 'A', x: 100, y: 100, radius: 30, color: 'blue' },
-    { id: 'B', x: 300, y: 100, radius: 30, color: 'green' },
-    { id: 'C', x: 200, y: 200, radius: 30, color: 'red' }
+let nodes: DiagramNode[] = [
+    { id: 0, x: 100, y: 100, radius: 30, color: 'blue' },
+    { id: 1, x: 300, y: 100, radius: 30, color: 'green' },
+    { id: 2, x: 200, y: 200, radius: 30, color: 'red' }
 ];
 
 const connections: ConnectionList = new ConnectionList(
-    { source: 'A', target: 'B' },
-    { source: 'C', target: 'B' }
+    { source: 0, target: 2 },
+    { source: 2, target: 2 }
 );
 
 
@@ -57,7 +59,8 @@ drawDiagram();
 enum Mode {
     View,
     Connection,
-    Dragging
+    Dragging,
+    Add
 }
 
 let mode: Mode = Mode.View;
@@ -83,6 +86,13 @@ canvas.addEventListener('mousedown', (e) => {
     const clickedNode = getNodeAt(mouseX, mouseY);
 
     if (clickedNode == null) {
+        if (mode === Mode.Add) {
+            nodes.push({
+                id: nodes.length,
+                x: mouseX,
+                y: mouseY,
+            });
+        }
         selectedNode = null;
         mode = Mode.View;
         drawDiagram();
@@ -108,7 +118,6 @@ canvas.addEventListener('mousedown', (e) => {
         mode = Mode.Connection;
         selectedNode = clickedNode;
     }
-    
 });
 
 canvas.addEventListener('mousemove', (e) => {
@@ -134,8 +143,6 @@ canvas.addEventListener('mousemove', (e) => {
             context.stroke();
         }
     }
-
-    
 });
 
 canvas.addEventListener('mouseup', () => {
@@ -148,6 +155,11 @@ canvas.addEventListener('mouseup', () => {
 canvas.addEventListener('mouseleave', () => {
     selectedNode = null;
 });
+
+
+addButton.addEventListener('click', () => {
+    mode = Mode.Add;
+}); 
 
 
 function exportDiagram() {

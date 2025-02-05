@@ -1,6 +1,6 @@
 // Define types for nodes and connections
 export type DiagramNode = {
-    id: string;
+    id: number;
     x: number;
     y: number;
     radius: number;
@@ -8,8 +8,8 @@ export type DiagramNode = {
 };
 
 export type Connection = {
-    source: string;
-    target: string;
+    source: number;
+    target: number;
 };
 
 /**
