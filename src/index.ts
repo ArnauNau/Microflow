@@ -121,6 +121,13 @@ function getNodeAt(x: number, y: number): DiagramNode | null {
     return null;
 }
 
+function addNode (x: number, y: number) {
+    const id = nodes.length;
+    nodes.push({ id, x, y });
+    console.log('New node: ', { id, x, y });
+    drawDiagram();
+}
+
 canvas.addEventListener('mousedown', (e) => {
     console.debug('[MOUSE] mousedown');
 
@@ -134,15 +141,12 @@ canvas.addEventListener('mousedown', (e) => {
 
     if (clickedNode == null) {
         if (mode === Mode.Add) {
-            nodes.push({
-                id: nodes.length,
-                x: mouseX,
-                y: mouseY,
-            });
-        }
-        selectedNode = null;
-        mode = Mode.View;
+            addNode(mouseX, mouseY); 
+        } //else { //this makes it so you can place nodes consecutively, instead of having to click the add button each time
+            mode = Mode.View;
+        //}
         drawDiagram();
+        selectedNode = null;        
         return;
     }
 
