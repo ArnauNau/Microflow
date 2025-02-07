@@ -4,6 +4,7 @@ node_modules/
 # TypeScript build output
 dist/
 public/dist/
+reference/
 
 # Environment variables
 .env
