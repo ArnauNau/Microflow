@@ -1,10 +1,15 @@
-// Define types for nodes and connections
+/**
+ * Represents a node in the diagram.
+ */
 export type DiagramNode = {
     id: number;
     x: number;
     y: number;
 };
 
+/**
+ * Stores a unidirectional connection between two nodes.
+ */
 export type Connection = {
     source: number;
     target: number;
