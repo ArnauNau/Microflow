@@ -1,0 +1,28 @@
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+canvas {
+    width: 100vw;
+    height: 100vh;
+    background: #f0f0f0;
+}
+
+#controls {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+}
+
+#controls > div {
+    margin-right: 20px;
+}
+
+button {
+    margin: 5px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
