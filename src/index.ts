@@ -24,10 +24,21 @@ const connections: ConnectionList = new ConnectionList(
     { source: 2, target: 2 }
 );
 
+function scaleCanvas(width: number, height: number) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(dpr, dpr);
+    return ctx;
+}
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    scaleCanvas(window.innerWidth, window.innerHeight);
     drawDiagram();
 }
 
