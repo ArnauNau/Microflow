@@ -24,13 +24,21 @@ const connections: ConnectionList = new ConnectionList(
     { source: 2, target: 2 }
 );
 
-
-const virtualWidth = 800;
-const virtualHeight = 600;
+function scaleCanvas(width: number, height: number) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(dpr, dpr);
+    return ctx;
+}
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    scaleCanvas(window.innerWidth, window.innerHeight);
     drawDiagram();
 }
 
@@ -41,18 +49,11 @@ function drawArrowToCursor(node: DiagramNode, cursor: MouseEvent) {
     const mouseX = cursor.clientX - rect.left;
     const mouseY = cursor.clientY - rect.top;
 
-    const offsetX = (canvas.width - virtualWidth) / 2;
-    const offsetY = (canvas.height - virtualHeight) / 2;
-
-    const adjustedX = mouseX - offsetX;
-    const adjustedY = mouseY - offsetY;
-
     context.save();
-    context.translate(offsetX, offsetY);
 
     context.beginPath();
     context.moveTo(node.x, node.y);
-    context.lineTo(adjustedX, adjustedY);
+    context.lineTo(mouseX, mouseY);
     context.strokeStyle = 'black';
     context.lineWidth = 2;
     context.stroke();
@@ -62,13 +63,9 @@ function drawArrowToCursor(node: DiagramNode, cursor: MouseEvent) {
 
 function drawDiagram() {
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    const offsetX = (canvas.width - virtualWidth) / 2;
-    const offsetY = (canvas.height - virtualHeight) / 2;
+    context.clearRect(0, 0, canvas.width, canvas.height)
 
     context.save();
-    context.translate(offsetX, offsetY);
 
 +   connections.forEach(conn => {
         const sourceNode = nodes.find(node => node.id === conn.source);
@@ -132,10 +129,8 @@ canvas.addEventListener('mousedown', (e) => {
     console.debug('[MOUSE] mousedown');
 
     const rect = canvas.getBoundingClientRect();
-    const offsetX = (canvas.width - virtualWidth) / 2;
-    const offsetY = (canvas.height - virtualHeight) / 2;
-    const mouseX = e.clientX - rect.left - offsetX;
-    const mouseY = e.clientY - rect.top - offsetY;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
     const clickedNode = getNodeAt(mouseX, mouseY);
 
@@ -179,8 +174,8 @@ canvas.addEventListener('mousemove', (event) => {
     if (selectedNode) {
         if (mode === Mode.Dragging) {
             const rect = canvas.getBoundingClientRect();
-            selectedNode.x = event.clientX - rect.left - (canvas.width - virtualWidth) / 2;
-            selectedNode.y = event.clientY - rect.top - (canvas.height - virtualHeight) / 2;
+            selectedNode.x = event.clientX - rect.left - (canvas.width) / 2;
+            selectedNode.y = event.clientY - rect.top - (canvas.height) / 2;
             drawDiagram();
         }
 
