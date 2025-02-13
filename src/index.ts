@@ -174,8 +174,8 @@ canvas.addEventListener('mousemove', (event) => {
     if (selectedNode) {
         if (mode === Mode.Dragging) {
             const rect = canvas.getBoundingClientRect();
-            selectedNode.x = event.clientX - rect.left - (canvas.width) / 2;
-            selectedNode.y = event.clientY - rect.top - (canvas.height) / 2;
+            selectedNode.x = (event.clientX - rect.left);
+            selectedNode.y = (event.clientY - rect.top);
             drawDiagram();
         }
 
