@@ -11,6 +11,7 @@ const context = canvas.getContext('2d')!;
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const NODE_RADIUS: number = canvas.height / 30;
+const ARROW_SIZE: number = NODE_RADIUS / 3;
 const NODE_COLOR: string = 'black';
 
 let nodes: DiagramNode[] = [
@@ -21,7 +22,7 @@ let nodes: DiagramNode[] = [
 
 const connections: ConnectionList = new ConnectionList(
     { source: 0, target: 2 },
-    { source: 2, target: 2 }
+    { source: 2, target: 1 }
 );
 
 function scaleCanvas(width: number, height: number) {
@@ -44,6 +45,36 @@ function resizeCanvas() {
 
 window.addEventListener('resize', resizeCanvas);
 
+function drawArrowHead(x: number, y: number, angle: number) {
+    context.save();
+    context.translate(x, y);
+    context.rotate(angle);
+
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.lineTo(-ARROW_SIZE, -ARROW_SIZE);
+    context.moveTo(0, 0);
+    context.lineTo(-ARROW_SIZE, ARROW_SIZE);
+    context.strokeStyle = 'black';
+    context.lineWidth = 2;
+    context.stroke();
+
+    context.restore();
+}
+
+function drawArrowToPoint(node: DiagramNode, targetX: number, targetY: number) {    
+    const arrowAngle = Math.atan2(targetY - node.y, targetX - node.x);
+
+    context.beginPath();
+    context.moveTo(node.x, node.y);
+    context.lineTo(targetX, targetY);
+    context.strokeStyle = 'black';
+    context.lineWidth = 2;
+    context.stroke();
+
+    drawArrowHead(targetX, targetY, arrowAngle);
+}
+
 function drawArrowToCursor(node: DiagramNode, cursor: MouseEvent) {
     const rect = canvas.getBoundingClientRect();
     const mouseX = cursor.clientX - rect.left;
@@ -51,12 +82,7 @@ function drawArrowToCursor(node: DiagramNode, cursor: MouseEvent) {
 
     context.save();
 
-    context.beginPath();
-    context.moveTo(node.x, node.y);
-    context.lineTo(mouseX, mouseY);
-    context.strokeStyle = 'black';
-    context.lineWidth = 2;
-    context.stroke();
+    drawArrowToPoint(node, mouseX, mouseY);
 
     context.restore();
 }
@@ -67,16 +93,23 @@ function drawDiagram() {
 
     context.save();
 
-+   connections.forEach(conn => {
+    connections.forEach(conn => {
         const sourceNode = nodes.find(node => node.id === conn.source);
         const targetNode = nodes.find(node => node.id === conn.target);
         if (sourceNode && targetNode) {
+            const angle = Math.atan2(targetNode.y - sourceNode.y, targetNode.x - sourceNode.x);
+
+            const adjustedTargetX = targetNode.x - (Math.cos(angle) * NODE_RADIUS);
+            const adjustedTargetY = targetNode.y - (Math.sin(angle) * NODE_RADIUS);
+
             context.beginPath();
             context.moveTo(sourceNode.x, sourceNode.y);
-            context.lineTo(targetNode.x, targetNode.y);
+            context.lineTo(adjustedTargetX, adjustedTargetY);
             context.strokeStyle = 'black';
             context.lineWidth = 2;
             context.stroke();
+
+            drawArrowHead(adjustedTargetX, adjustedTargetY, angle);
         }
     });
 
@@ -122,7 +155,6 @@ function addNode (x: number, y: number) {
     const id = nodes.length;
     nodes.push({ id, x, y });
     console.log('New node: ', { id, x, y });
-    drawDiagram();
 }
 
 canvas.addEventListener('mousedown', (e) => {
