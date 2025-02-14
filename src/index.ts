@@ -247,6 +247,28 @@ function exportDiagram() {
         connections
     };
     console.log("\n" + JSON.stringify(data, null, 2) + "\n");
+
+
+    console.log(JSON.stringify(data, null, 2));
+
+    const jsonBlob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json'
+    });
+
+
+    const url = URL.createObjectURL(jsonBlob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', 'diagram.json');
+
+
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
 }
 
 exportButton.addEventListener('click', exportDiagram);
