@@ -25,21 +25,32 @@ const connections: ConnectionList = new ConnectionList(
     { source: 2, target: 1 }
 );
 
-function scaleCanvas(width: number, height: number) {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = width + "px";
-    canvas.style.height = height + "px";
+let scaleX: number = 1;
+let scaleY: number = 1;
+function scaleCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr: number = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + "px";
+    canvas.style.height = rect.height + "px";
+    scaleX = canvas.width / canvas.getBoundingClientRect().width;
+    scaleY = canvas.height / canvas.getBoundingClientRect().height;
     const ctx = canvas.getContext('2d')!;
     ctx.scale(dpr, dpr);
     return ctx;
 }
 
+function getMouseMappedCoordinates(event: MouseEvent) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
+    };
+}
+
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    scaleCanvas(window.innerWidth, window.innerHeight);
+    scaleCanvas();
     drawDiagram();
 }
 
@@ -76,13 +87,11 @@ function drawArrowToPoint(node: DiagramNode, targetX: number, targetY: number) {
 }
 
 function drawArrowToCursor(node: DiagramNode, cursor: MouseEvent) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = cursor.clientX - rect.left;
-    const mouseY = cursor.clientY - rect.top;
+    const mouseCoords = getMouseMappedCoordinates(cursor);
 
     context.save();
 
-    drawArrowToPoint(node, mouseX, mouseY);
+    drawArrowToPoint(node, mouseCoords.x, mouseCoords.y);
 
     context.restore();
 }
@@ -160,18 +169,19 @@ function addNode (x: number, y: number) {
 canvas.addEventListener('mousedown', (e) => {
     console.debug('[MOUSE] mousedown');
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const mouseCoords = getMouseMappedCoordinates(e);
 
-    const clickedNode = getNodeAt(mouseX, mouseY);
+    const clickedNode = getNodeAt(mouseCoords.x, mouseCoords.y);
 
     if (clickedNode == null) {
         if (mode === Mode.Add) {
-            addNode(mouseX, mouseY); 
-        } //else { //this makes it so you can place nodes consecutively, instead of having to click the add button each time
+            addNode(mouseCoords.x, mouseCoords.y);
+        }
+        //this makes it so you can place nodes consecutively, if pressing alt
+        if (!e.altKey) {
             mode = Mode.View;
-        //}
+        }
+
         drawDiagram();
         selectedNode = null;        
         return;
@@ -187,7 +197,7 @@ canvas.addEventListener('mousedown', (e) => {
         mode = Mode.View;
 
         const sourceNode = selectedNode;
-        const targetNode = getNodeAt(mouseX, mouseY);
+        const targetNode = getNodeAt(mouseCoords.x, mouseCoords.y);
         if (sourceNode && targetNode && sourceNode !== targetNode) {
             connections.pushUnique({ source: sourceNode.id, target: targetNode.id });
         }
@@ -205,9 +215,9 @@ canvas.addEventListener('mousemove', (event) => {
 
     if (selectedNode) {
         if (mode === Mode.Dragging) {
-            const rect = canvas.getBoundingClientRect();
-            selectedNode.x = (event.clientX - rect.left);
-            selectedNode.y = (event.clientY - rect.top);
+            const mouseCoords = getMouseMappedCoordinates(event);
+            selectedNode.x = mouseCoords.x;
+            selectedNode.y = mouseCoords.y;
             drawDiagram();
         }
 
