@@ -1,15 +1,17 @@
 {
   "name": "microflow",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "test",
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "test": "tsc --noEmit && jest",
+    "set-version": "node scripts/set-version.js",
+    "build": "rm -rf public/dist && npm run set-version && tsc",
+    "build-watch": "rm -rf public/dist && npm run set-version && tsc --watch"
   },
   "repository": {
     "type": "git",
-    "url": "y"
+    "url": "https://github.com/ArnauNau/Microflow"
   },
   "author": "ArnauNau",
   "license": "LGPL-3.0-or-later",
