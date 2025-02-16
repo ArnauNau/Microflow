@@ -1,18 +1,25 @@
 body {
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 canvas {
     /* width: 100vw;
     height: 100vh; */
+    flex-grow: 1;
     background: #f0f0f0;
+    overflow: hidden;
 }
 
 #controls {
     display: flex;
     align-items: center;
     padding: 10px;
+    height: auto;
 }
 
 #controls > div {
@@ -25,4 +32,12 @@ button {
     border: 1px solid #ccc;
     border-radius: 4px;
     cursor: pointer;
+}
+
+#information-bar {
+    background-color: #ddd;
+    padding: 5px 10px;
+    text-align: center;
+    font-size: 0.8em;
+    height: auto;
 }
