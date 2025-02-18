@@ -1,7 +1,6 @@
 
 import { DiagramNode, ConnectionList } from './Model.js';
 
-
 const exportButton = document.getElementById('export') as HTMLButtonElement;
 const addButton = document.getElementById('add') as HTMLButtonElement;
 
@@ -10,14 +9,18 @@ const context = canvas.getContext('2d')!;
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-const NODE_RADIUS: number = canvas.height / 30;
-const ARROW_SIZE: number = NODE_RADIUS / 3;
-const NODE_COLOR: string = 'black';
+
+const SIZE_FACTOR: number = canvas.height / 30;
+
+DiagramNode.setRadius(SIZE_FACTOR);
+
+const ARROW_SIZE: number = SIZE_FACTOR / 3;
 
 let nodes: DiagramNode[] = [
-    { id: 0, x: 100, y: 100 },
-    { id: 1, x: 300, y: 100 },
-    { id: 2, x: 200, y: 200 }
+    new DiagramNode(0, 300, 100),
+    new DiagramNode(1, 100, 100),
+    new DiagramNode(2, 200, 200),
+    new DiagramNode(3, 700, 700),
 ];
 
 const connections: ConnectionList = new ConnectionList(
@@ -108,8 +111,8 @@ function drawDiagram() {
         if (sourceNode && targetNode) {
             const angle = Math.atan2(targetNode.y - sourceNode.y, targetNode.x - sourceNode.x);
 
-            const adjustedTargetX = targetNode.x - (Math.cos(angle) * NODE_RADIUS);
-            const adjustedTargetY = targetNode.y - (Math.sin(angle) * NODE_RADIUS);
+            const adjustedTargetX = targetNode.x - (Math.cos(angle) * DiagramNode.RADIUS);
+            const adjustedTargetY = targetNode.y - (Math.sin(angle) * DiagramNode.RADIUS);
 
             context.beginPath();
             context.moveTo(sourceNode.x, sourceNode.y);
@@ -123,13 +126,7 @@ function drawDiagram() {
     });
 
     nodes.forEach(node => {
-        context.beginPath();
-        context.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
-        context.fillStyle = NODE_COLOR;
-        context.fill();
-        context.strokeStyle = 'black';
-        context.lineWidth = 2;
-        context.stroke();
+        node.draw(context);
     });
 
     context.restore();
@@ -151,9 +148,7 @@ let selectedNode: DiagramNode | null = null;
 function getNodeAt(x: number, y: number): DiagramNode | null {
     for (let i = nodes.length - 1; i >= 0; i--) {
         const node = nodes[i];
-        const dx = node.x - x;
-        const dy = node.y - y;
-        if (dx * dx + dy * dy <= NODE_RADIUS * NODE_RADIUS) {
+        if (node.isCursorOver(x, y)) {
             return node;
         }
     }
@@ -162,7 +157,7 @@ function getNodeAt(x: number, y: number): DiagramNode | null {
 
 function addNode (x: number, y: number) {
     const id = nodes.length;
-    nodes.push({ id, x, y });
+    nodes.push( new DiagramNode(id, x, y) );
     console.log('New node: ', { id, x, y });
 }
 
