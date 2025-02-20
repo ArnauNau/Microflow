@@ -7,19 +7,17 @@ const addButton = document.getElementById('add') as HTMLButtonElement;
 const canvas = document.getElementById('diagram') as HTMLCanvasElement;
 const context = canvas.getContext('2d')!;
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+let SIZE_FACTOR: number = canvas.height / 3;
 
-const SIZE_FACTOR: number = canvas.height / 30;
 
 DiagramNode.setRadius(SIZE_FACTOR);
 
 const ARROW_SIZE: number = SIZE_FACTOR / 3;
 
 let nodes: DiagramNode[] = [
-    new DiagramNode(0, 300, 100),
+    new DiagramNode(0, 600, 100),
     new DiagramNode(1, 100, 100),
-    new DiagramNode(2, 200, 200),
+    new DiagramNode(2, 350, 350),
     new DiagramNode(3, 700, 700),
 ];
 
@@ -28,33 +26,34 @@ const connections: ConnectionList = new ConnectionList(
     { source: 2, target: 1 }
 );
 
-let scaleX: number = 1;
-let scaleY: number = 1;
-function scaleCanvas() {
+function scaleCanvas(ctx: CanvasRenderingContext2D) {
     const rect = canvas.getBoundingClientRect();
     const dpr: number = window.devicePixelRatio || 1;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    canvas.style.width = rect.width + "px";
-    canvas.style.height = rect.height + "px";
-    scaleX = canvas.width / canvas.getBoundingClientRect().width;
-    scaleY = canvas.height / canvas.getBoundingClientRect().height;
-    const ctx = canvas.getContext('2d')!;
+
+    const realWidth = window.innerWidth;
+    const realHeight = rect.height;
+
+    canvas.width = realWidth * dpr;
+    canvas.height = realHeight * dpr;
+    canvas.style.width = realWidth + "px";
+    canvas.style.height = realHeight + "px";
+    
+    ctx.resetTransform();
     ctx.scale(dpr, dpr);
-    return ctx;
 }
 
 function getMouseMappedCoordinates(event: MouseEvent) {
     const rect = canvas.getBoundingClientRect();
     return {
-        x: (event.clientX - rect.left) * scaleX,
-        y: (event.clientY - rect.top) * scaleY
+        x: (event.clientX - rect.left),
+        y: (event.clientY - rect.top)
     };
 }
 
 function resizeCanvas() {
-    scaleCanvas();
-    drawDiagram();
+    console.debug('[WINDOW] resize');
+    scaleCanvas(context);
+    drawDiagram(context, nodes, connections);
 }
 
 window.addEventListener('resize', resizeCanvas);
