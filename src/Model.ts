@@ -25,12 +25,13 @@ interface Hoverable {
 /**
  * Represents a diagram element that can be drawn on the canvas.
  */
-export abstract class DiagramElement implements Drawable, Connectable {
+export abstract class DiagramElement implements Drawable, Connectable, Hoverable {
 
     constructor(public id: number, public x: number, public y: number) {}
 
     abstract draw(ctx: CanvasRenderingContext2D): void;
     abstract getBorderPositionAtAngle(angle: number): { x: number, y: number };
+    abstract isCursorOver(mouseX: number, mouseY: number): boolean;
 }
 
 /**
