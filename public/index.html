@@ -4,24 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canvas Diagram App</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-        canvas {
-            width: 100vw;
-            height: 100vh;
-            background: #f0f0f0;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="controls">
-        <button id="export">Export</button>
-        <button id="add">Add Node</button>
+        <div>
+            <button id="export">Export</button>
+        </div>
+        <div>
+            Modes:
+            <button id="select">Select</button>
+            <button id="add">Add Node</button>
+            <button id="connect">Connect</button>
+        </div>
     </div>
     <canvas id="diagram"></canvas>
+    
+
+    <footer id="information-bar">
+        <p>By <a href="https://a.rnau.me">Arnau Nau</a> | Version: <span id="version">loading...</span> | <b>WORK IN PROGRESS</b></p>
+    </footer>
+
     <script type="module" src="dist/index.js"></script>
+    <script type="module" src="dist/version.js"></script>
 </body>
 </html>
