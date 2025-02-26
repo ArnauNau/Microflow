@@ -8,6 +8,11 @@ export function initDrawing(sizeFactor: number) {
     DiagramNode.setRadius(SIZE_FACTOR);
 }
 
+export type Coordinates = {
+    x: number,
+    y: number
+};
+
 function drawArrowHead(context: CanvasRenderingContext2D, x: number, y: number, angle: number) {
     context.save();
     context.translate(x, y);
@@ -38,7 +43,7 @@ function drawArrowToPoint(context: CanvasRenderingContext2D, node: DiagramNode, 
     drawArrowHead(context, targetX, targetY, arrowAngle);
 }
 
-export function drawArrowToCursor(context: CanvasRenderingContext2D, node: DiagramNode, mouseCoords: { x: number, y: number }) {
+export function drawArrowToCursor(context: CanvasRenderingContext2D, node: DiagramNode, mouseCoords: Coordinates) {
     context.save();
 
     drawArrowToPoint(context, node, mouseCoords.x, mouseCoords.y);
@@ -46,9 +51,9 @@ export function drawArrowToCursor(context: CanvasRenderingContext2D, node: Diagr
     context.restore();
 }
 
-export function drawDiagram(context: CanvasRenderingContext2D, elements: DiagramElement[], connections: ConnectionList) {
+export function drawDiagram(context: CanvasRenderingContext2D, elements: DiagramElement[], connections: ConnectionList, viewOffset: Coordinates) {
 
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height)
+    context.clearRect(0 - viewOffset.x, 0 - viewOffset.y, context.canvas.width, context.canvas.height)
 
     context.save();
 
