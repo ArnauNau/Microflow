@@ -51,9 +51,9 @@ export function drawArrowToCursor(context: CanvasRenderingContext2D, node: Diagr
     context.restore();
 }
 
-export function drawDiagram(context: CanvasRenderingContext2D, elements: DiagramElement[], connections: ConnectionList, viewOffset: Coordinates) {
+export function drawDiagram(context: CanvasRenderingContext2D, elements: DiagramElement[], connections: ConnectionList): void {
 
-    context.clearRect(0 - viewOffset.x, 0 - viewOffset.y, context.canvas.width, context.canvas.height)
+   clearCanvas(context);
 
     context.save();
 
@@ -80,5 +80,12 @@ export function drawDiagram(context: CanvasRenderingContext2D, elements: Diagram
         el.draw(context);
     });
 
+    context.restore();
+}
+
+function clearCanvas(context: CanvasRenderingContext2D): void {
+    context.save();
+    context.resetTransform();
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.restore();
 }

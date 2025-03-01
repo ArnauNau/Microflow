@@ -9,6 +9,10 @@ const canvas = document.getElementById('diagram') as HTMLCanvasElement;
 const context : CanvasRenderingContext2D = canvas.getContext('2d')!;
 
 let viewOffset: Coordinates = { x: 0, y: 0 };
+let zoomLevel: number = 1.0;
+
+const MAX_ZOOM_LEVEL: number = 0.5;
+const MIN_ZOOM_LEVEL: number = 4.0;
 
 let SIZE_FACTOR: number = canvas.height / 3;
 
@@ -42,25 +46,26 @@ function scaleCanvas(ctx: CanvasRenderingContext2D) {
     ctx.resetTransform();
     ctx.scale(dpr, dpr);
     ctx.translate(viewOffset.x, viewOffset.y);
+    ctx.scale(zoomLevel, zoomLevel);
 }
 
 function getMouseMappedCoordinates(event: MouseEvent) : Coordinates {
     const rect: DOMRect = canvas.getBoundingClientRect();
     return {
-        x: (event.clientX - rect.left) - viewOffset.x,
-        y: (event.clientY - rect.top) -  viewOffset.y
+        x: ((event.clientX - rect.left) - viewOffset.x) / zoomLevel,
+        y: ((event.clientY - rect.top) -  viewOffset.y) / zoomLevel
     };
 }
 
 function resizeCanvas() : void {
     console.debug('[WINDOW] resize');
     scaleCanvas(context);
-    drawDiagram(context, diagramElements, connections, viewOffset);
+    drawDiagram(context, diagramElements, connections);
 }
 
 window.addEventListener('resize', resizeCanvas);
 
-drawDiagram(context, diagramElements, connections, viewOffset);
+drawDiagram(context, diagramElements, connections);
 
 
 enum Mode {
@@ -109,7 +114,7 @@ canvas.addEventListener('mousedown', (e: MouseEvent) => {
             mode = Mode.Dragging;
         }
 
-        drawDiagram(context, diagramElements, connections, viewOffset);
+        drawDiagram(context, diagramElements, connections);
         selectedNode = null;        
         return;
     }
@@ -130,7 +135,7 @@ canvas.addEventListener('mousedown', (e: MouseEvent) => {
         }
         
         selectedNode = null;
-        drawDiagram(context, diagramElements, connections, viewOffset);
+        drawDiagram(context, diagramElements, connections);
     } else {
         mode = Mode.Connection;
         selectedNode = clickedNode;
@@ -151,19 +156,19 @@ canvas.addEventListener('mousemove', (event: MouseEvent) => {
         context.strokeStyle = 'black';
         context.lineWidth = 2;
         context.stroke();
-        drawDiagram(context, diagramElements, connections, viewOffset);
+        drawDiagram(context, diagramElements, connections);
     }
 
 
     if (selectedNode) {
         if (mode === Mode.Dragging) {
-            selectedNode.x += event.movementX;
-            selectedNode.y += event.movementY;
-            drawDiagram(context, diagramElements, connections, viewOffset);
+            selectedNode.x += event.movementX / zoomLevel;
+            selectedNode.y += event.movementY / zoomLevel;
+            drawDiagram(context, diagramElements, connections);
         }
 
         if (mode === Mode.Connection) {
-            drawDiagram(context, diagramElements, connections, viewOffset);
+            drawDiagram(context, diagramElements, connections);
             drawArrowToCursor(context, selectedNode, getMouseMappedCoordinates(event));
         }
     }
@@ -172,7 +177,7 @@ canvas.addEventListener('mousemove', (event: MouseEvent) => {
             viewOffset.x += event.movementX;
             viewOffset.y += event.movementY;
             scaleCanvas(context);
-            drawDiagram(context, diagramElements, connections, viewOffset);
+            drawDiagram(context, diagramElements, connections);
         }
     }
 });
@@ -190,9 +195,39 @@ canvas.addEventListener('mouseleave', () => {
     console.debug('[MOUSE] mouseleave');
     selectedNode = null;
     mode = Mode.View;
-    drawDiagram(context, diagramElements, connections, viewOffset);
+    drawDiagram(context, diagramElements, connections);
 });
 
+canvas.addEventListener('wheel', (event: WheelEvent): void => {
+    event.preventDefault();
+
+    const ZOOM_FACTOR: number = 1.1;
+    const oldZoom = zoomLevel;
+
+    if (event.deltaY < 0) {
+        zoomLevel *= ZOOM_FACTOR;
+    }
+    else {
+        zoomLevel /= ZOOM_FACTOR;
+    }
+
+    zoomLevel = Math.max(MAX_ZOOM_LEVEL, Math.min(MIN_ZOOM_LEVEL, zoomLevel));
+
+    const zoomChange: number = zoomLevel / oldZoom;
+    const rect: DOMRect = canvas.getBoundingClientRect();
+    const mousePos: Coordinates = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+
+    viewOffset.x = mousePos.x - (mousePos.x - viewOffset.x) * zoomChange;
+    viewOffset.y = mousePos.y - (mousePos.y - viewOffset.y) * zoomChange;
+
+    scaleCanvas(context);
+    drawDiagram(context, diagramElements, connections);
+
+    console.debug('[ZOOM] Level: ' + zoomLevel.toFixed(2));
+});
 
 addButton.addEventListener('click', () => {
     console.debug('[MOUSE] click');
