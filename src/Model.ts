@@ -1,3 +1,5 @@
+import {Coordinates} from "./Diagram.ts";
+
 interface Drawable {
 
     /**
@@ -15,11 +17,10 @@ interface Hoverable {
     
     /**
      * Checks if the cursor is on top of the element
-     * @param mouseX X-coordinate of the cursor
-     * @param mouseY Y-coordinate of the cursor
+     * @param mouseCoords X,Y-coordinate of the cursor
      * @returns Whether the cursor is on the element
      */
-    isCursorOver(mouseX: number, mouseY: number): boolean;
+    isCursorOver(mouseCoords: Coordinates): boolean;
 }
 
 /**
@@ -27,11 +28,11 @@ interface Hoverable {
  */
 export abstract class DiagramElement implements Drawable, Connectable, Hoverable {
 
-    constructor(public id: number, public x: number, public y: number) {}
+    constructor(public id: number, public position: Coordinates) {}
 
     abstract draw(ctx: CanvasRenderingContext2D): void;
     abstract getBorderPositionAtAngle(angle: number): { x: number, y: number };
-    abstract isCursorOver(mouseX: number, mouseY: number): boolean;
+    abstract isCursorOver(mouseCoords: Coordinates): boolean;
 }
 
 /**
@@ -46,25 +47,22 @@ export class DiagramNode extends DiagramElement implements Hoverable {
         DiagramNode.RADIUS = radius;
     }
 
-    isCursorOver(mouseX: number, mouseY: number): boolean {
-        const dx = this.x - mouseX;
-        const dy = this.y - mouseY;
-        if (dx * dx + dy * dy <= DiagramNode.RADIUS * DiagramNode.RADIUS) {
-            return true;
-        }
-        return false;
+    isCursorOver(mouseCoords: Coordinates): boolean {
+        const dx: number = this.position.x - mouseCoords.x;
+        const dy: number = this.position.y - mouseCoords.y;
+        return ((dx * dx) + (dy * dy)) <= (DiagramNode.RADIUS * DiagramNode.RADIUS);
     }
 
     getBorderPositionAtAngle(angle: number): { x: number, y: number } {
         return {
-            x: this.x - Math.cos(angle) * DiagramNode.RADIUS,
-            y: this.y - Math.sin(angle) * DiagramNode.RADIUS
+            x: this.position.x - Math.cos(angle) * DiagramNode.RADIUS,
+            y: this.position.y - Math.sin(angle) * DiagramNode.RADIUS
         };
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, DiagramNode.RADIUS, 0, Math.PI * 2);
+        ctx.arc(this.position.x, this.position.y, DiagramNode.RADIUS, 0, Math.PI * 2);
         ctx.fillStyle = 'black';
         ctx.fill();
         ctx.strokeStyle = 'black';
@@ -74,42 +72,42 @@ export class DiagramNode extends DiagramElement implements Hoverable {
 };
 
 export class DiagramPeripheral extends DiagramElement implements Hoverable {
-    //TODO: using DiagramNode.RADIUS for now, but should be either SIZE_FACTOR or a derivate value (as is done with RADIUS)
-    isCursorOver(mouseX: number, mouseY: number): boolean {
-        return mouseX >= this.x - (DiagramNode.RADIUS*2) / 2 &&
-               mouseX <= this.x + (DiagramNode.RADIUS*2) / 2 &&
-               mouseY >= this.y - DiagramNode.RADIUS / 2 &&
-               mouseY <= this.y + DiagramNode.RADIUS;
+    //TODO: using DiagramNode.RADIUS for now, but should be either SIZE_FACTOR or a derivative value (as is done with RADIUS)
+    isCursorOver(mouseCoords: Coordinates): boolean {
+        return mouseCoords.x >= this.position.x - (DiagramNode.RADIUS*2) / 2 &&
+               mouseCoords.x <= this.position.x + (DiagramNode.RADIUS*2) / 2 &&
+               mouseCoords.y >= this.position.y - DiagramNode.RADIUS / 2 &&
+               mouseCoords.y <= this.position.y + DiagramNode.RADIUS;
     }
 
-    getBorderPositionAtAngle(angle: number): { x: number, y: number } {
-        // it's a rectangle, i need to find the intersection point from a line originating from the center of the element at the given angle with the rectangle border.
-        const halfWidth = (DiagramNode.RADIUS*2) / 2;
-        const halfHeight = DiagramNode.RADIUS / 2;
-        const dx = Math.cos(angle);
-        const dy = Math.sin(angle);
+    getBorderPositionAtAngle(angle: number): Coordinates {
+        //rectangle, need to find the intersection point from a line originating from the center of the element at the given angle with the rectangle border.
+        const halfWidth: number = (DiagramNode.RADIUS*2) / 2;
+        const halfHeight: number = DiagramNode.RADIUS / 2;
+        const dx: number = Math.cos(angle);
+        const dy: number = Math.sin(angle);
 
-        // Handle edge cases when dx or dy is 0
+        //edge cases when dx or dy is 0
         if (dx === 0) {
-            return { x: this.x, y: this.y + (dy > 0 ? halfHeight : -halfHeight) };
+            return { x: this.position.x, y: this.position.y + (dy > 0 ? halfHeight : -halfHeight) };
         }
         if (dy === 0) {
-            return { x: this.x + (dx > 0 ? halfWidth : -halfWidth), y: this.y };
+            return { x: this.position.x + (dx > 0 ? halfWidth : -halfWidth), y: this.position.y };
         }
 
-        // How far do we need to go in x and y directions?
-        const tX = halfWidth / Math.abs(dx);
-        const tY = halfHeight / Math.abs(dy);
+        //how far in x and y directions?
+        const tX : number = halfWidth / Math.abs(dx);
+        const tY : number = halfHeight / Math.abs(dy);
 
-        // Use the smaller distance: that's where the ray hits the border.
-        const t = Math.min(tX, tY);
+        //use smaller distance: where the ray hits the border.
+        const t : number = Math.min(tX, tY);
 
-        return { x: this.x - dx * t, y: this.y - dy * t };
+        return { x: this.position.x - dx * t, y: this.position.y - dy * t };
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
         ctx.beginPath();
-        ctx.rect(this.x - (DiagramNode.RADIUS*2) / 2, this.y - DiagramNode.RADIUS / 2,
+        ctx.rect(this.position.x - (DiagramNode.RADIUS*2) / 2, this.position.y - DiagramNode.RADIUS / 2,
                     (DiagramNode.RADIUS*2), DiagramNode.RADIUS);
         ctx.fillStyle = 'red';
         ctx.fill();

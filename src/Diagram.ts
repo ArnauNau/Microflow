@@ -2,7 +2,7 @@ import { DiagramNode, ConnectionList, DiagramElement } from "./Model.js";
 
 let SIZE_FACTOR: number;
 let ARROW_SIZE: number;
-export function initDrawing(sizeFactor: number) {
+export function initDrawing(sizeFactor: number): void {
     SIZE_FACTOR = sizeFactor;
     ARROW_SIZE = SIZE_FACTOR / 3;
     DiagramNode.setRadius(SIZE_FACTOR);
@@ -13,7 +13,7 @@ export type Coordinates = {
     y: number
 };
 
-function drawArrowHead(context: CanvasRenderingContext2D, x: number, y: number, angle: number) {
+function drawArrowHead(context: CanvasRenderingContext2D, x: number, y: number, angle: number): void {
     context.save();
     context.translate(x, y);
     context.rotate(angle);
@@ -30,11 +30,11 @@ function drawArrowHead(context: CanvasRenderingContext2D, x: number, y: number, 
     context.restore();
 }
 
-function drawArrowToPoint(context: CanvasRenderingContext2D, node: DiagramNode, targetX: number, targetY: number) {    
-    const arrowAngle = Math.atan2(targetY - node.y, targetX - node.x);
+function drawArrowToPoint(context: CanvasRenderingContext2D, node: DiagramNode, targetX: number, targetY: number): void {
+    const arrowAngle: number = Math.atan2(targetY - node.position.y, targetX - node.position.x);
 
     context.beginPath();
-    context.moveTo(node.x, node.y);
+    context.moveTo(node.position.x, node.position.y);
     context.lineTo(targetX, targetY);
     context.strokeStyle = 'black';
     context.lineWidth = 2;
@@ -43,7 +43,7 @@ function drawArrowToPoint(context: CanvasRenderingContext2D, node: DiagramNode, 
     drawArrowHead(context, targetX, targetY, arrowAngle);
 }
 
-export function drawArrowToCursor(context: CanvasRenderingContext2D, node: DiagramNode, mouseCoords: Coordinates) {
+export function drawArrowToCursor(context: CanvasRenderingContext2D, node: DiagramNode, mouseCoords: Coordinates): void {
     context.save();
 
     drawArrowToPoint(context, node, mouseCoords.x, mouseCoords.y);
@@ -61,12 +61,14 @@ export function drawDiagram(context: CanvasRenderingContext2D, elements: Diagram
         const sourceElement = elements.find(el => el.id === conn.source);
         const targetElement = elements.find(el => el.id === conn.target);
         if (sourceElement && targetElement) {
-            const angle = Math.atan2(targetElement.y - sourceElement.y, targetElement.x - sourceElement.x);
+            const angle: number = Math.atan2(
+                targetElement.position.y - sourceElement.position.y,
+                targetElement.position.x - sourceElement.position.x);
             
-            const adjustedTargetPos = targetElement.getBorderPositionAtAngle(angle);
+            const adjustedTargetPos: Coordinates = targetElement.getBorderPositionAtAngle(angle);
 
             context.beginPath();
-            context.moveTo(sourceElement.x, sourceElement.y);
+            context.moveTo(sourceElement.position.x, sourceElement.position.y);
             context.lineTo(adjustedTargetPos.x, adjustedTargetPos.y);
             context.strokeStyle = 'black';
             context.lineWidth = 2;

@@ -19,11 +19,11 @@ let SIZE_FACTOR: number = canvas.height / 3;
 initDrawing(SIZE_FACTOR);
 
 let diagramElements: DiagramElement[] = [
-    new DiagramNode(0, 600, 100),
-    new DiagramNode(1, 100, 100),
-    new DiagramNode(2, 350, 350),
-    new DiagramNode(3, 700, 700),
-    new DiagramPeripheral(4, 100, 500),
+    new DiagramNode(0, { x: 600, y: 100}),
+    new DiagramNode(1, { x: 100, y: 100}),
+    new DiagramNode(2, { x: 350, y: 350}),
+    new DiagramNode(3, { x: 700, y: 700}),
+    new DiagramPeripheral(4, { x: 100, y: 500}),
 ];
 
 const connections: ConnectionList = new ConnectionList(
@@ -31,12 +31,12 @@ const connections: ConnectionList = new ConnectionList(
     { source: 2, target: 1 }
 );
 
-function scaleCanvas(ctx: CanvasRenderingContext2D) {
-    const rect = canvas.getBoundingClientRect();
+function scaleCanvas(ctx: CanvasRenderingContext2D) : void {
+    const rect: DOMRect = canvas.getBoundingClientRect();
     const dpr: number = window.devicePixelRatio || 1;
 
-    const realWidth = window.innerWidth;
-    const realHeight = rect.height;
+    const realWidth: number = window.innerWidth;
+    const realHeight: number = rect.height;
 
     canvas.width = realWidth * dpr;
     canvas.height = realHeight * dpr;
@@ -79,32 +79,31 @@ let mode: Mode = Mode.View;
 let selectedNode: DiagramNode | null = null;
 
 
-function getNodeAt(x: number, y: number): DiagramElement | null {
-    for (let i = diagramElements.length - 1; i >= 0; i--) {
-        const element = diagramElements[i];
-        if (element.isCursorOver(x, y)) {
+function getNodeAt(coords: Coordinates): DiagramElement | null {
+    for (const element of diagramElements) {
+        if (element.isCursorOver(coords)) {
             return element;
         }
     }
     return null;
 }
 
-function addNode (x: number, y: number) {
+function addNode (coords: Coordinates): void {
     const id = diagramElements.length;
-    diagramElements.push( new DiagramNode(id, x, y) );
-    console.log('New node: ', { id, x, y });
+    diagramElements.push( new DiagramNode(id, coords) );
+    console.log('New node: ', { id, coords });
 }
 
-canvas.addEventListener('mousedown', (e: MouseEvent) => {
+canvas.addEventListener('mousedown', (e: MouseEvent): void => {
     console.debug('[MOUSE] mousedown');
 
     const mouseCoords: Coordinates = getMouseMappedCoordinates(e);
 
-    const clickedNode: DiagramNode | null = getNodeAt(mouseCoords.x, mouseCoords.y);
+    const clickedNode: DiagramNode | null = getNodeAt(mouseCoords);
 
     if (clickedNode == null) {
         if (mode === Mode.Add) {
-            addNode(mouseCoords.x, mouseCoords.y);
+            addNode(mouseCoords);
             //this makes it so you can place nodes consecutively, if pressing alt
             if (!e.altKey) {
                 mode = Mode.View;
@@ -129,7 +128,7 @@ canvas.addEventListener('mousedown', (e: MouseEvent) => {
         mode = Mode.View;
 
         const sourceNode = selectedNode;
-        const targetNode = getNodeAt(mouseCoords.x, mouseCoords.y);
+        const targetNode = getNodeAt(mouseCoords);
         if (sourceNode && targetNode && sourceNode !== targetNode) {
             connections.pushUnique({ source: sourceNode.id, target: targetNode.id });
         }
@@ -142,7 +141,7 @@ canvas.addEventListener('mousedown', (e: MouseEvent) => {
     }
 });
 
-canvas.addEventListener('mousemove', (event: MouseEvent) => {
+canvas.addEventListener('mousemove', (event: MouseEvent): void => {
     console.debug('[MOUSE] mousemove');
 
     // for debugging purposes
@@ -162,8 +161,8 @@ canvas.addEventListener('mousemove', (event: MouseEvent) => {
 
     if (selectedNode) {
         if (mode === Mode.Dragging) {
-            selectedNode.x += event.movementX / zoomLevel;
-            selectedNode.y += event.movementY / zoomLevel;
+            selectedNode.position.x += event.movementX / zoomLevel;
+            selectedNode.position.y += event.movementY / zoomLevel;
             drawDiagram(context, diagramElements, connections);
         }
 
@@ -182,7 +181,7 @@ canvas.addEventListener('mousemove', (event: MouseEvent) => {
     }
 });
 
-canvas.addEventListener('mouseup', () => {
+canvas.addEventListener('mouseup', (): void => {
     console.debug('[MOUSE] mouseup');
 
     if (mode === Mode.Dragging) {
@@ -191,7 +190,7 @@ canvas.addEventListener('mouseup', () => {
     }
 });
 
-canvas.addEventListener('mouseleave', () => {
+canvas.addEventListener('mouseleave', (): void => {
     console.debug('[MOUSE] mouseleave');
     selectedNode = null;
     mode = Mode.View;
