@@ -1,4 +1,4 @@
-import { DiagramNode, ConnectionList, DiagramElement } from "./Model.js";
+import {DiagramNode, ConnectionList, DiagramElement, Label, renderLabel} from "./Model.js";
 
 let SIZE_FACTOR: number;
 let ARROW_SIZE: number;
@@ -75,6 +75,33 @@ export function drawDiagram(context: CanvasRenderingContext2D, elements: Diagram
             context.stroke();
 
             drawArrowHead(context, adjustedTargetPos.x, adjustedTargetPos.y, angle);
+
+            //draw connection label if it exists
+            if (conn.label) {
+                //calculate midpoint of the connection
+                const midX = (sourceElement.position.x + adjustedTargetPos.x) / 2;
+                const midY = (sourceElement.position.y + adjustedTargetPos.y) / 2;
+
+                //offset the label slightly perpendicular to the line
+                const perpAngle = targetAngle + Math.PI / 2;
+                const labelOffset = 15; // Distance from the line
+                const labelX = midX + Math.cos(perpAngle) * labelOffset;
+                const labelY = midY + Math.sin(perpAngle) * labelOffset;
+
+                // Default style for connection labels
+                const defaultConnectionLabel: Label = {
+                    text: conn.label.text,
+                    style: {
+                        fontSize: 12,
+                        color: 'black',
+                        textAlign: 'center',
+                        textBaseline: 'middle',
+                        ...conn.label.style
+                    }
+                };
+
+                renderLabel(context, conn.label.style ? conn.label : defaultConnectionLabel, {x: labelX, y: labelY});
+            }
         }
     });
 

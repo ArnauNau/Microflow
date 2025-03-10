@@ -24,6 +24,84 @@ interface Hoverable {
 }
 
 /**
+ * Text styling options for diagram elements
+ */
+export interface TextStyle {
+    fontSize?: number;
+    fontFamily?: string;
+    color?: string;
+    textAlign?: CanvasTextAlign;
+    textBaseline?: CanvasTextBaseline;
+}
+
+export interface Label {
+    text: string;
+    style?: TextStyle;
+}
+
+/**
+ * Default text style for diagram elements
+ */
+export const DEFAULT_TEXT_STYLE: Required<TextStyle> = {
+    fontSize: 20,
+    fontFamily: 'Arial',
+    color: 'white',
+    textAlign: 'center',
+    textBaseline: 'middle'
+};
+
+/**
+ * Utility function to render text with given style
+ */
+export function renderLabel(
+    ctx: CanvasRenderingContext2D,
+    label: Label | undefined,
+    coords: Coordinates,
+): void {
+    if (!label || !label.text.trim()) {
+        return;
+    }
+
+    ctx.save();
+
+    const finalStyle = { ...DEFAULT_TEXT_STYLE, ...label.style }; //spread operator, deestructures -> merges optionals with default style
+
+    ctx.font = `${finalStyle.fontSize}px ${finalStyle.fontFamily}`;
+    ctx.fillStyle = finalStyle.color;
+    ctx.textAlign = finalStyle.textAlign;
+    ctx.textBaseline = finalStyle.textBaseline;
+
+    ctx.fillText(label.text, coords.x, coords.y);
+
+    ctx.restore();
+}
+
+// /**
+//  * Utility function to get text dimensions
+//  */
+// function getLabelDimensions(
+//     ctx: CanvasRenderingContext2D,
+//     label: Label | undefined
+// ) : {width: number, height: number} {
+//     if (!label || !label.text.trim()) {
+//         return {width: 0, height: 0};
+//     }
+//
+//     ctx.save();
+//
+//     const finalStyle = {...DEFAULT_TEXT_STYLE, ...label.style};
+//     ctx.font = `${finalStyle.fontSize}px ${finalStyle.fontFamily}`;
+//
+//     const metrics: TextMetrics = ctx.measureText(label.text);
+//     const width: number = metrics.width;
+//     const height: number = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+//
+//     ctx.restore();
+//
+//     return {width, height};
+// }
+
+/**
  * Represents a diagram element that can be drawn on the canvas.
  */
 export abstract class DiagramElement implements Drawable, Connectable, Hoverable {
@@ -47,6 +125,10 @@ export class DiagramNode extends DiagramElement implements Hoverable {
         DiagramNode.RADIUS = radius;
     }
 
+    constructor(id: number, position: Coordinates, public label?: Label) {
+        super(id, position);
+    }
+
     isCursorOver(mouseCoords: Coordinates): boolean {
         const dx: number = this.position.x - mouseCoords.x;
         const dy: number = this.position.y - mouseCoords.y;
@@ -68,11 +150,21 @@ export class DiagramNode extends DiagramElement implements Hoverable {
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        //draw text at center of node
+        if (this.label) {
+            renderLabel(ctx, this.label, this.position);
+        }
     }
-};
+}
 
 export class DiagramPeripheral extends DiagramElement implements Hoverable {
     //TODO: using DiagramNode.RADIUS for now, but should be either SIZE_FACTOR or a derivative value (as is done with RADIUS)
+
+    constructor(id: number, position: Coordinates, public label?: Label) {
+        super(id, position);
+    }
+
     isCursorOver(mouseCoords: Coordinates): boolean {
         return mouseCoords.x >= this.position.x - (DiagramNode.RADIUS*2) / 2 &&
                mouseCoords.x <= this.position.x + (DiagramNode.RADIUS*2) / 2 &&
@@ -114,6 +206,10 @@ export class DiagramPeripheral extends DiagramElement implements Hoverable {
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        if (this.label) {
+            renderLabel(ctx, this.label, this.position);
+        }
     }
 }
 
@@ -123,6 +219,7 @@ export class DiagramPeripheral extends DiagramElement implements Hoverable {
 export type Connection = {
     source: number;
     target: number;
+    label?: Label;
 };
 
 /**

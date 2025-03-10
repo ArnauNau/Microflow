@@ -19,15 +19,15 @@ let SIZE_FACTOR: number = canvas.height / 3;
 initDrawing(SIZE_FACTOR);
 
 let diagramElements: DiagramElement[] = [
-    new DiagramNode(0, { x: 600, y: 100}),
-    new DiagramNode(1, { x: 100, y: 100}),
-    new DiagramNode(2, { x: 350, y: 350}),
-    new DiagramNode(3, { x: 700, y: 700}),
-    new DiagramPeripheral(4, { x: 100, y: 500}),
+    new DiagramNode(0, { x: 600, y: 100}, {text: "Logic", style: {color: 'yellow', fontSize: SIZE_FACTOR/2}}),
+    new DiagramNode(1, { x: 100, y: 100}, {text: "SIO", style: {color: 'purple', fontSize: 14}}),
+    new DiagramNode(2, { x: 350, y: 350}, ),
+    new DiagramNode(3, { x: 700, y: 700}, ),
+    new DiagramPeripheral(4, { x: 100, y: 500}, ),
 ];
 
 const connections: ConnectionList = new ConnectionList(
-    { source: 0, target: 2 },
+    { source: 0, target: 2, label: {text: 'Connection', style: {color: 'green'}} },
     { source: 2, target: 1 }
 );
 
