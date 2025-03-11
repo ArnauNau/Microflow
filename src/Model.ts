@@ -10,7 +10,7 @@ interface Drawable {
 }
 
 interface Connectable {
-    getBorderPositionAtAngle(angle: number): { x: number, y: number };
+    getBorderPositionAtAngle(angle: number): Coordinates;
 }
 
 interface Hoverable {
@@ -109,7 +109,7 @@ export abstract class DiagramElement implements Drawable, Connectable, Hoverable
     constructor(public id: number, public position: Coordinates) {}
 
     abstract draw(ctx: CanvasRenderingContext2D): void;
-    abstract getBorderPositionAtAngle(angle: number): { x: number, y: number };
+    abstract getBorderPositionAtAngle(angle: number): Coordinates;
     abstract isCursorOver(mouseCoords: Coordinates): boolean;
 }
 
@@ -135,7 +135,7 @@ export class DiagramNode extends DiagramElement implements Hoverable {
         return ((dx * dx) + (dy * dy)) <= (DiagramNode.RADIUS * DiagramNode.RADIUS);
     }
 
-    getBorderPositionAtAngle(angle: number): { x: number, y: number } {
+    getBorderPositionAtAngle(angle: number): Coordinates {
         return {
             x: this.position.x - Math.cos(angle) * DiagramNode.RADIUS,
             y: this.position.y - Math.sin(angle) * DiagramNode.RADIUS
@@ -145,10 +145,10 @@ export class DiagramNode extends DiagramElement implements Hoverable {
     draw(ctx: CanvasRenderingContext2D): void {
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, DiagramNode.RADIUS, 0, Math.PI * 2);
-        ctx.fillStyle = 'black';
-        ctx.fill();
+        // ctx.fillStyle = 'black';
+        // ctx.fill();
         ctx.strokeStyle = 'black';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 4;
         ctx.stroke();
 
         //draw text at center of node
