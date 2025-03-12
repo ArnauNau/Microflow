@@ -61,20 +61,25 @@ export function drawDiagram(context: CanvasRenderingContext2D, elements: Diagram
         const sourceElement = elements.find(el => el.id === conn.source);
         const targetElement = elements.find(el => el.id === conn.target);
         if (sourceElement && targetElement) {
-            const angle: number = Math.atan2(
+
+            const sourceAngle: number = Math.atan2(
+                sourceElement.position.y - targetElement.position.y,
+                sourceElement.position.x - targetElement.position.x);
+            const targetAngle: number = Math.atan2(
                 targetElement.position.y - sourceElement.position.y,
                 targetElement.position.x - sourceElement.position.x);
-            
-            const adjustedTargetPos: Coordinates = targetElement.getBorderPositionAtAngle(angle);
+
+            const adjustedSourcePos: Coordinates = sourceElement.getBorderPositionAtAngle(sourceAngle);
+            const adjustedTargetPos: Coordinates = targetElement.getBorderPositionAtAngle(targetAngle);
 
             context.beginPath();
-            context.moveTo(sourceElement.position.x, sourceElement.position.y);
+            context.moveTo(adjustedSourcePos.x, adjustedSourcePos.y);
             context.lineTo(adjustedTargetPos.x, adjustedTargetPos.y);
             context.strokeStyle = 'black';
             context.lineWidth = 2;
             context.stroke();
 
-            drawArrowHead(context, adjustedTargetPos.x, adjustedTargetPos.y, angle);
+            drawArrowHead(context, adjustedTargetPos.x, adjustedTargetPos.y, targetAngle);
 
             //draw connection label if it exists
             if (conn.label) {
