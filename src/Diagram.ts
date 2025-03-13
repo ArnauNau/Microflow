@@ -30,25 +30,33 @@ function drawArrowHead(context: CanvasRenderingContext2D, x: number, y: number, 
     context.restore();
 }
 
-function drawArrowToPoint(context: CanvasRenderingContext2D, node: DiagramNode, targetX: number, targetY: number): void {
-    const arrowAngle: number = Math.atan2(targetY - node.position.y, targetX - node.position.x);
+function drawArrowToPoint(context: CanvasRenderingContext2D, element: DiagramElement, targetCoords: Coordinates): void {
+    const arrowAngle: number = Math.atan2(targetCoords.y - element.position.y, targetCoords.x - element.position.x);
+
+    const sourceAngle: number = Math.atan2(
+        element.position.y - targetCoords.y,
+        element.position.x - targetCoords.x);
+    const adjustedSourcePos: Coordinates = element.getBorderPositionAtAngle(sourceAngle);
 
     context.beginPath();
-    context.moveTo(node.position.x, node.position.y);
-    context.lineTo(targetX, targetY);
+    context.moveTo(adjustedSourcePos.x, adjustedSourcePos.y);
+    context.lineTo(targetCoords.x, targetCoords.y);
     context.strokeStyle = 'black';
     context.lineWidth = 2;
     context.stroke();
 
-    drawArrowHead(context, targetX, targetY, arrowAngle);
+    drawArrowHead(context, targetCoords.x, targetCoords.y, arrowAngle);
 }
 
-export function drawArrowToCursor(context: CanvasRenderingContext2D, node: DiagramNode, mouseCoords: Coordinates): void {
-    context.save();
+export function drawArrowToCursor(context: CanvasRenderingContext2D, element: DiagramElement, mouseCoords: Coordinates): void {
+    //check if cursor is inside source element area, to avoid drawing the arrow inside the node
+    if (!element.isCursorOver(mouseCoords)) {
+        context.save();
 
-    drawArrowToPoint(context, node, mouseCoords.x, mouseCoords.y);
+        drawArrowToPoint(context, element, mouseCoords);
 
-    context.restore();
+        context.restore();
+    }
 }
 
 export function drawDiagram(context: CanvasRenderingContext2D, elements: DiagramElement[], connections: ConnectionList): void {
@@ -62,25 +70,14 @@ export function drawDiagram(context: CanvasRenderingContext2D, elements: Diagram
         const targetElement = elements.find(el => el.id === conn.target);
         if (sourceElement && targetElement) {
 
-            const sourceAngle: number = Math.atan2(
-                sourceElement.position.y - targetElement.position.y,
-                sourceElement.position.x - targetElement.position.x);
             const targetAngle: number = Math.atan2(
                 targetElement.position.y - sourceElement.position.y,
                 targetElement.position.x - sourceElement.position.x);
 
-            const adjustedSourcePos: Coordinates = sourceElement.getBorderPositionAtAngle(sourceAngle);
             const adjustedTargetPos: Coordinates = targetElement.getBorderPositionAtAngle(targetAngle);
 
-            context.beginPath();
-            context.moveTo(adjustedSourcePos.x, adjustedSourcePos.y);
-            context.lineTo(adjustedTargetPos.x, adjustedTargetPos.y);
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.stroke();
-
-            drawArrowHead(context, adjustedTargetPos.x, adjustedTargetPos.y, targetAngle);
-
+            drawArrowToPoint(context, sourceElement, adjustedTargetPos)
+            
             //draw connection label if it exists
             if (conn.label) {
                 //calculate midpoint of the connection
