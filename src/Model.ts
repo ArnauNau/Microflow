@@ -158,6 +158,64 @@ export class DiagramNode extends DiagramElement implements Hoverable {
     }
 }
 
+/**
+ * Represents an ADT node.
+ */
+export class ADTNode extends DiagramNode {
+
+    getAnglesAtIntersections(otherNodeCoords: Coordinates, otherNodeRadius: number): {startAngle: number, endAngle: number} | null {
+        const dx: number = otherNodeCoords.x - this.position.x;
+        const dy: number = otherNodeCoords.y - this.position.y;
+        const distance: number = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > DiagramNode.RADIUS + otherNodeRadius ||
+            distance < Math.abs(DiagramNode.RADIUS - otherNodeRadius)) {
+            return null; //no intersection
+        }
+
+        const a: number = (DiagramNode.RADIUS * DiagramNode.RADIUS - otherNodeRadius * otherNodeRadius + distance * distance) / (2 * distance);
+        const h: number = Math.sqrt(DiagramNode.RADIUS * DiagramNode.RADIUS - a * a);
+
+        const midX: number = this.position.x + a * dx / distance;
+        const midY: number = this.position.y + a * dy / distance;
+
+        const intersection1 = {
+            x: midX + h * dy / distance,
+            y: midY - h * dx / distance
+        };
+
+        const intersection2 = {
+            x: midX - h * dy / distance,
+            y: midY + h * dx / distance
+        };
+
+        const angle1: number = Math.atan2(intersection1.y - otherNodeCoords.y, intersection1.x - otherNodeCoords.x);
+        const angle2: number = Math.atan2(intersection2.y - otherNodeCoords.y, intersection2.x - otherNodeCoords.x);
+
+        return { startAngle: Math.min(angle1, angle2), endAngle: Math.max(angle1, angle2) };
+    }
+
+    draw (ctx: CanvasRenderingContext2D): void {
+        super.draw(ctx);
+
+        const wedgeOffset: number = DiagramNode.RADIUS / 6;
+        const wedgeCenter: Coordinates = {
+            x: this.position.x + DiagramNode.RADIUS + wedgeOffset,
+            y: this.position.y - DiagramNode.RADIUS - wedgeOffset
+        };
+
+        const angles = this.getAnglesAtIntersections(wedgeCenter, DiagramNode.RADIUS);
+        if (angles) {
+            //draw wedge on top. center of the semicircle would be pos + RADIUS
+            ctx.beginPath();
+            ctx.arc(wedgeCenter.x, wedgeCenter.y, DiagramNode.RADIUS, angles.startAngle, angles.endAngle);
+            ctx.strokeStyle =  'black';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+    }
+}
+
 export class DiagramPeripheral extends DiagramElement implements Hoverable {
     //TODO: using DiagramNode.RADIUS for now, but should be either SIZE_FACTOR or a derivative value (as is done with RADIUS)
 

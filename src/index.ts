@@ -1,5 +1,5 @@
 
-import { DiagramElement, DiagramPeripheral, DiagramNode, ConnectionList } from './Model.js';
+import {DiagramElement, DiagramPeripheral, DiagramNode, ConnectionList, ADTNode} from './Model.js';
 import { initDrawing, drawArrowToCursor, drawDiagram, Coordinates } from './Diagram.js';
 
 const exportButton = document.getElementById('export') as HTMLButtonElement;
@@ -20,7 +20,7 @@ initDrawing(SIZE_FACTOR);
 
 let diagramElements: DiagramElement[] = [
     new DiagramNode(0, { x: 600, y: 100}, {text: "Logic", style: {color: 'yellow', fontSize: SIZE_FACTOR/2}}),
-    new DiagramNode(1, { x: 100, y: 100}, {text: "SIO", style: {color: 'purple', fontSize: 14}}),
+    new ADTNode(1, { x: 100, y: 100}, {text: "SIO", style: {color: 'purple', fontSize: 14}}),
     new DiagramNode(2, { x: 350, y: 350}, ),
     new DiagramNode(3, { x: 700, y: 700}, ),
     new DiagramPeripheral(4, { x: 100, y: 500}, ),
