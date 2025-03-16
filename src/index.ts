@@ -95,8 +95,6 @@ function addNode (coords: Coordinates): void {
 }
 
 canvas.addEventListener('mousedown', (e: MouseEvent): void => {
-    console.debug('[MOUSE] mousedown');
-
     const mouseCoords: Coordinates = getMouseMappedCoordinates(e);
 
     const clickedNode: DiagramNode | null = getNodeAt(mouseCoords);
@@ -111,6 +109,8 @@ canvas.addEventListener('mousedown', (e: MouseEvent): void => {
             
         } else if (mode === Mode.View && e.altKey) {
             mode = Mode.Dragging;
+        } else if (mode === Mode.Connection) {
+            mode = Mode.View;
         }
 
         drawDiagram(context, diagramElements, connections);
@@ -142,8 +142,6 @@ canvas.addEventListener('mousedown', (e: MouseEvent): void => {
 });
 
 canvas.addEventListener('mousemove', (event: MouseEvent): void => {
-    console.debug('[MOUSE] mousemove');
-
     // for debugging purposes
     {
         //draw a red node where the cursor is
@@ -172,7 +170,7 @@ canvas.addEventListener('mousemove', (event: MouseEvent): void => {
         }
     }
     else {
-        if (mode === Mode.Dragging && !selectedNode) {
+        if (mode === Mode.Dragging) {
             viewOffset.x += event.movementX;
             viewOffset.y += event.movementY;
             scaleCanvas(context);
@@ -182,8 +180,6 @@ canvas.addEventListener('mousemove', (event: MouseEvent): void => {
 });
 
 canvas.addEventListener('mouseup', (): void => {
-    console.debug('[MOUSE] mouseup');
-
     if (mode === Mode.Dragging) {
         selectedNode = null;
         mode = Mode.View;
@@ -261,7 +257,6 @@ function exportDiagram() {
 
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
 }
 
 exportButton.addEventListener('click', exportDiagram);
