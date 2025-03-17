@@ -196,27 +196,32 @@ canvas.addEventListener('mouseleave', (): void => {
 canvas.addEventListener('wheel', (event: WheelEvent): void => {
     event.preventDefault();
 
-    const ZOOM_FACTOR: number = 1.1;
-    const oldZoom = zoomLevel;
+    if (event.altKey) {
+        const ZOOM_FACTOR: number = 1.03;
+        const oldZoom: number = zoomLevel;
 
-    if (event.deltaY < 0) {
-        zoomLevel *= ZOOM_FACTOR;
+        if (event.deltaY < 0) {
+            zoomLevel *= ZOOM_FACTOR;
+        } else {
+            zoomLevel /= ZOOM_FACTOR;
+        }
+
+        zoomLevel = Math.max(MAX_ZOOM_LEVEL, Math.min(MIN_ZOOM_LEVEL, zoomLevel));
+
+        const zoomChange: number = zoomLevel / oldZoom;
+        const rect: DOMRect = canvas.getBoundingClientRect();
+        const mousePos: Coordinates = {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+
+        viewOffset.x = mousePos.x - (mousePos.x - viewOffset.x) * zoomChange;
+        viewOffset.y = mousePos.y - (mousePos.y - viewOffset.y) * zoomChange;
     }
     else {
-        zoomLevel /= ZOOM_FACTOR;
+        viewOffset.y -= event.deltaY * 1.2;
+        viewOffset.x -= event.deltaX * 1.2;
     }
-
-    zoomLevel = Math.max(MAX_ZOOM_LEVEL, Math.min(MIN_ZOOM_LEVEL, zoomLevel));
-
-    const zoomChange: number = zoomLevel / oldZoom;
-    const rect: DOMRect = canvas.getBoundingClientRect();
-    const mousePos: Coordinates = {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
-    };
-
-    viewOffset.x = mousePos.x - (mousePos.x - viewOffset.x) * zoomChange;
-    viewOffset.y = mousePos.y - (mousePos.y - viewOffset.y) * zoomChange;
 
     scaleCanvas(context);
     drawDiagram(context, diagramElements, connections);
