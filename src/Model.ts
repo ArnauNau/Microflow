@@ -43,9 +43,9 @@ export interface Label {
  * Default text style for diagram elements
  */
 export const DEFAULT_TEXT_STYLE: Required<TextStyle> = {
-    fontSize: 20,
+    fontSize: -1,
     fontFamily: 'Arial',
-    color: 'white',
+    color: 'black',
     textAlign: 'center',
     textBaseline: 'middle'
 };
@@ -65,8 +65,9 @@ export function renderLabel(
     ctx.save();
 
     const finalStyle = { ...DEFAULT_TEXT_STYLE, ...label.style }; //spread operator, deestructures -> merges optionals with default style
+    const fontSize = finalStyle.fontSize == -1 ? DiagramNode.RADIUS/2 : finalStyle.fontSize;
 
-    ctx.font = `${finalStyle.fontSize}px ${finalStyle.fontFamily}`;
+    ctx.font = `${fontSize}px ${finalStyle.fontFamily}`;
     ctx.fillStyle = finalStyle.color;
     ctx.textAlign = finalStyle.textAlign;
     ctx.textBaseline = finalStyle.textBaseline;
@@ -142,11 +143,13 @@ export class DiagramNode extends DiagramElement implements Hoverable {
         };
     }
 
-    draw(ctx: CanvasRenderingContext2D): void {
+    draw(ctx: CanvasRenderingContext2D, color?: string): void {
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, DiagramNode.RADIUS, 0, Math.PI * 2);
-        // ctx.fillStyle = 'black';
-        // ctx.fill();
+        if (color) {
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 4;
         ctx.stroke();
@@ -162,6 +165,8 @@ export class DiagramNode extends DiagramElement implements Hoverable {
  * Represents an ADT node.
  */
 export class ADTNode extends DiagramNode {
+
+    private static ADTColor: string = 'rgb(252 208 161)';
 
     getAnglesAtIntersections(otherNodeCoords: Coordinates, otherNodeRadius: number): {startAngle: number, endAngle: number} | null {
         const dx: number = otherNodeCoords.x - this.position.x;
@@ -196,7 +201,7 @@ export class ADTNode extends DiagramNode {
     }
 
     draw (ctx: CanvasRenderingContext2D): void {
-        super.draw(ctx);
+        super.draw(ctx, ADTNode.ADTColor);
 
         const wedgeOffset: number = DiagramNode.RADIUS / 6;
         const wedgeCenter: Coordinates = {
