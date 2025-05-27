@@ -3,14 +3,17 @@
 ![Project Status: In Development](https://img.shields.io/badge/Status-In_Development-orange)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/licenses/MIT)
 
-A rework of the classic ADT (Abstract Data Type) Diagram tool used in the Digital Systems and Microprocesors course at LaSalle Campus Barcelona - Universitat Ramón Llull.
+A rework of the classic ADT (Abstract Data Type) Diagram tool used in the Digital Systems and Microprocessors course at LaSalle Campus Barcelona - Universitat Ramón Llull.
 
 ## Features
-
+Planned for the 1.0.0 release:
 *   Create and visualize Abstract Data Type (ADT) diagrams or Motor Finite State Machine (mFSM) diagrams.
 *   Snappy and minimal interface.
 *   Save and load diagrams locally (files).
+* Export diagrams as images.
 *   Accessible from any device with a web browser.
+
+*For current features check Milestones in the issues tab.*
 
 ## How to use
 Using it is as easy as going to [microflow.app](https://microflow.app). If you are not familiar with Microflow, there is a blue information button you can click on the top right which will show all the ways you can use Microflow.
@@ -23,7 +26,7 @@ This version aims to be an evolution of the old one by making it accessible inst
 Contributions are welcome! Please see what needs to be done in the issues tab, or make your own features. You will probably need to read the next section.
 
 ## How to build 
-If you are interested in contributing or changing the code, this section is for you. If not you'd probably do better skipping this section.
+If you are interested in contributing or changing the code, this section is for you. If not you'd probably do better skipping this.
 
 Microflow is all local, that means it doesn't call any API or external service, the only traffic is the initial one when loading the website. This is subject to change if usage metrics are to be extracted in the future.
 
@@ -42,7 +45,7 @@ In order to build the project yourself you need to have:
 > [!TIP]
 > To automatically rebuild the project when a change is detected you can use `npm run build-watch`.
 
-To test the project I use the Live Server VS Code plugin, you can use whatever method you want.
+To test the project as changes are made to the code, I use the Live Server VS Code plugin, you can use whatever method you want.
 
 If you want to host the project yourself, you're welcome to do so following the License terms. Since the project is self-contained and implemented as a static website you have a wide range of free options to host your own version of Microflow.
 

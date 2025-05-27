@@ -1,23 +1,29 @@
 
 import { DiagramElement, DiagramPeripheral, DiagramNode, ConnectionList } from './Model.js';
-import { initDrawing, drawArrowToCursor, drawDiagram } from './Diagram.js';
+import { initDrawing, drawArrowToCursor, drawDiagram, Coordinates } from './Diagram.js';
 
 const exportButton = document.getElementById('export') as HTMLButtonElement;
 const addButton = document.getElementById('add') as HTMLButtonElement;
 
 const canvas = document.getElementById('diagram') as HTMLCanvasElement;
-const context = canvas.getContext('2d')!;
+const context : CanvasRenderingContext2D = canvas.getContext('2d')!;
+
+let viewOffset: Coordinates = { x: 0, y: 0 };
+let zoomLevel: number = 1.0;
+
+const MAX_ZOOM_LEVEL: number = 0.5;
+const MIN_ZOOM_LEVEL: number = 4.0;
 
 let SIZE_FACTOR: number = canvas.height / 3;
 
 initDrawing(SIZE_FACTOR);
 
 let diagramElements: DiagramElement[] = [
-    new DiagramNode(0, 600, 100),
-    new DiagramNode(1, 100, 100),
-    new DiagramNode(2, 350, 350),
-    new DiagramNode(3, 700, 700),
-    new DiagramPeripheral(4, 100, 500),
+    new DiagramNode(0, { x: 600, y: 100}),
+    new DiagramNode(1, { x: 100, y: 100}),
+    new DiagramNode(2, { x: 350, y: 350}),
+    new DiagramNode(3, { x: 700, y: 700}),
+    new DiagramPeripheral(4, { x: 100, y: 500}),
 ];
 
 const connections: ConnectionList = new ConnectionList(
@@ -25,12 +31,12 @@ const connections: ConnectionList = new ConnectionList(
     { source: 2, target: 1 }
 );
 
-function scaleCanvas(ctx: CanvasRenderingContext2D) {
-    const rect = canvas.getBoundingClientRect();
+function scaleCanvas(ctx: CanvasRenderingContext2D) : void {
+    const rect: DOMRect = canvas.getBoundingClientRect();
     const dpr: number = window.devicePixelRatio || 1;
 
-    const realWidth = window.innerWidth;
-    const realHeight = rect.height;
+    const realWidth: number = window.innerWidth;
+    const realHeight: number = rect.height;
 
     canvas.width = realWidth * dpr;
     canvas.height = realHeight * dpr;
@@ -39,17 +45,19 @@ function scaleCanvas(ctx: CanvasRenderingContext2D) {
     
     ctx.resetTransform();
     ctx.scale(dpr, dpr);
+    ctx.translate(viewOffset.x, viewOffset.y);
+    ctx.scale(zoomLevel, zoomLevel);
 }
 
-function getMouseMappedCoordinates(event: MouseEvent) {
-    const rect = canvas.getBoundingClientRect();
+function getMouseMappedCoordinates(event: MouseEvent) : Coordinates {
+    const rect: DOMRect = canvas.getBoundingClientRect();
     return {
-        x: (event.clientX - rect.left),
-        y: (event.clientY - rect.top)
+        x: ((event.clientX - rect.left) - viewOffset.x) / zoomLevel,
+        y: ((event.clientY - rect.top) -  viewOffset.y) / zoomLevel
     };
 }
 
-function resizeCanvas() {
+function resizeCanvas() : void {
     console.debug('[WINDOW] resize');
     scaleCanvas(context);
     drawDiagram(context, diagramElements, connections);
@@ -71,36 +79,38 @@ let mode: Mode = Mode.View;
 let selectedNode: DiagramNode | null = null;
 
 
-function getNodeAt(x: number, y: number): DiagramElement | null {
-    for (let i = diagramElements.length - 1; i >= 0; i--) {
-        const element = diagramElements[i];
-        if (element.isCursorOver(x, y)) {
+function getNodeAt(coords: Coordinates): DiagramElement | null {
+    for (const element of diagramElements) {
+        if (element.isCursorOver(coords)) {
             return element;
         }
     }
     return null;
 }
 
-function addNode (x: number, y: number) {
+function addNode (coords: Coordinates): void {
     const id = diagramElements.length;
-    diagramElements.push( new DiagramNode(id, x, y) );
-    console.log('New node: ', { id, x, y });
+    diagramElements.push( new DiagramNode(id, coords) );
+    console.log('New node: ', { id, coords });
 }
 
-canvas.addEventListener('mousedown', (e) => {
+canvas.addEventListener('mousedown', (e: MouseEvent): void => {
     console.debug('[MOUSE] mousedown');
 
-    const mouseCoords = getMouseMappedCoordinates(e);
+    const mouseCoords: Coordinates = getMouseMappedCoordinates(e);
 
-    const clickedNode = getNodeAt(mouseCoords.x, mouseCoords.y);
+    const clickedNode: DiagramNode | null = getNodeAt(mouseCoords);
 
     if (clickedNode == null) {
         if (mode === Mode.Add) {
-            addNode(mouseCoords.x, mouseCoords.y);
-        }
-        //this makes it so you can place nodes consecutively, if pressing alt
-        if (!e.altKey) {
-            mode = Mode.View;
+            addNode(mouseCoords);
+            //this makes it so you can place nodes consecutively, if pressing alt
+            if (!e.altKey) {
+                mode = Mode.View;
+            }
+            
+        } else if (mode === Mode.View && e.altKey) {
+            mode = Mode.Dragging;
         }
 
         drawDiagram(context, diagramElements, connections);
@@ -118,7 +128,7 @@ canvas.addEventListener('mousedown', (e) => {
         mode = Mode.View;
 
         const sourceNode = selectedNode;
-        const targetNode = getNodeAt(mouseCoords.x, mouseCoords.y);
+        const targetNode = getNodeAt(mouseCoords);
         if (sourceNode && targetNode && sourceNode !== targetNode) {
             connections.pushUnique({ source: sourceNode.id, target: targetNode.id });
         }
@@ -131,13 +141,13 @@ canvas.addEventListener('mousedown', (e) => {
     }
 });
 
-canvas.addEventListener('mousemove', (event) => {
+canvas.addEventListener('mousemove', (event: MouseEvent): void => {
     console.debug('[MOUSE] mousemove');
 
+    // for debugging purposes
     {
-        drawDiagram(context, diagramElements, connections);
         //draw a red node where the cursor is
-        const mouseCoords = getMouseMappedCoordinates(event);
+        const mouseCoords: Coordinates = getMouseMappedCoordinates(event);
         context.beginPath();
         context.arc(mouseCoords.x, mouseCoords.y, DiagramNode.RADIUS / 3, 0, Math.PI * 2);
         context.fillStyle = 'red';
@@ -145,25 +155,33 @@ canvas.addEventListener('mousemove', (event) => {
         context.strokeStyle = 'black';
         context.lineWidth = 2;
         context.stroke();
+        drawDiagram(context, diagramElements, connections);
     }
 
 
     if (selectedNode) {
         if (mode === Mode.Dragging) {
-            const mouseCoords = getMouseMappedCoordinates(event);
-            selectedNode.x = mouseCoords.x;
-            selectedNode.y = mouseCoords.y;
+            selectedNode.position.x += event.movementX / zoomLevel;
+            selectedNode.position.y += event.movementY / zoomLevel;
             drawDiagram(context, diagramElements, connections);
         }
 
         if (mode === Mode.Connection) {
-            drawDiagram(context, diagramElements, connections);    
+            drawDiagram(context, diagramElements, connections);
             drawArrowToCursor(context, selectedNode, getMouseMappedCoordinates(event));
+        }
+    }
+    else {
+        if (mode === Mode.Dragging && !selectedNode) {
+            viewOffset.x += event.movementX;
+            viewOffset.y += event.movementY;
+            scaleCanvas(context);
+            drawDiagram(context, diagramElements, connections);
         }
     }
 });
 
-canvas.addEventListener('mouseup', () => {
+canvas.addEventListener('mouseup', (): void => {
     console.debug('[MOUSE] mouseup');
 
     if (mode === Mode.Dragging) {
@@ -172,13 +190,43 @@ canvas.addEventListener('mouseup', () => {
     }
 });
 
-canvas.addEventListener('mouseleave', () => {
+canvas.addEventListener('mouseleave', (): void => {
     console.debug('[MOUSE] mouseleave');
     selectedNode = null;
     mode = Mode.View;
     drawDiagram(context, diagramElements, connections);
 });
 
+canvas.addEventListener('wheel', (event: WheelEvent): void => {
+    event.preventDefault();
+
+    const ZOOM_FACTOR: number = 1.1;
+    const oldZoom = zoomLevel;
+
+    if (event.deltaY < 0) {
+        zoomLevel *= ZOOM_FACTOR;
+    }
+    else {
+        zoomLevel /= ZOOM_FACTOR;
+    }
+
+    zoomLevel = Math.max(MAX_ZOOM_LEVEL, Math.min(MIN_ZOOM_LEVEL, zoomLevel));
+
+    const zoomChange: number = zoomLevel / oldZoom;
+    const rect: DOMRect = canvas.getBoundingClientRect();
+    const mousePos: Coordinates = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+
+    viewOffset.x = mousePos.x - (mousePos.x - viewOffset.x) * zoomChange;
+    viewOffset.y = mousePos.y - (mousePos.y - viewOffset.y) * zoomChange;
+
+    scaleCanvas(context);
+    drawDiagram(context, diagramElements, connections);
+
+    console.debug('[ZOOM] Level: ' + zoomLevel.toFixed(2));
+});
 
 addButton.addEventListener('click', () => {
     console.debug('[MOUSE] click');
